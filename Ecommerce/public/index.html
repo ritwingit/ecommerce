@@ -29,7 +29,12 @@
       body {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
           sans-serif;
-        background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+        background: radial-gradient(
+          circle at top,
+          #111827 0,
+          #020617 45%,
+          #000 100%
+        );
         color: var(--text);
         min-height: 100vh;
         display: flex;
@@ -103,7 +108,11 @@
         border-radius: 0 999px 999px 0;
         border: 1px solid var(--border-subtle);
         border-left: none;
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-strong)
+        );
         padding: 0 1rem;
         font-size: 0.9rem;
         font-weight: 600;
@@ -180,9 +189,16 @@
         content: "";
         position: absolute;
         inset: -120px;
-        background:
-          radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.12) 0, transparent 55%),
-          radial-gradient(circle at 100% 100%, rgba(251, 191, 36, 0.14) 0, transparent 55%);
+        background: radial-gradient(
+            circle at 0 0,
+            rgba(56, 189, 248, 0.12) 0,
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 100% 100%,
+            rgba(251, 191, 36, 0.14) 0,
+            transparent 55%
+          );
         pointer-events: none;
         opacity: 0.9;
       }
@@ -348,7 +364,12 @@
       }
 
       .product-card {
-        background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+        background: radial-gradient(
+          circle at top,
+          #020617 0,
+          #020617 40%,
+          #020617 100%
+        );
         border-radius: 1rem;
         border: 1px solid rgba(31, 41, 55, 0.95);
         padding: 0.75rem;
@@ -374,7 +395,12 @@
       }
 
       .product-img-wrap {
-        background: radial-gradient(circle at center, #020617 0, #020617 45%, #020617 100%);
+        background: radial-gradient(
+          circle at center,
+          #020617 0,
+          #020617 45%,
+          #020617 100%
+        );
         border-radius: 0.8rem;
         border: 1px solid rgba(31, 41, 55, 0.9);
         padding: 0.75rem;
@@ -464,7 +490,11 @@
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-strong)
+        );
         border-color: rgba(202, 138, 4, 0.9);
         color: #111827;
         font-weight: 600;
@@ -604,7 +634,11 @@
         padding: 0.5rem;
         border-radius: 999px;
         border: 1px solid rgba(202, 138, 4, 0.9);
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-strong)
+        );
         color: #111827;
         font-weight: 600;
         cursor: pointer;
@@ -804,7 +838,7 @@
         </div>
 
         <form class="auth-form" id="authForm">
-          <div class="auth-field" id="nameField" style="display: none;">
+          <div class="auth-field" id="nameField" style="display: none">
             <label class="auth-label" for="authName">Name</label>
             <input class="auth-input" type="text" id="authName" />
           </div>
@@ -973,25 +1007,28 @@
         }
 
         try {
-          authSubmitBtn.textContent = isLoginMode ? "Logging in…" : "Registering…";
+          authSubmitBtn.textContent = isLoginMode
+            ? "Logging in…"
+            : "Registering…";
           authSubmitBtn.disabled = true;
 
-          const endpoint = isLoginMode ? "/api/auth/login" : "/api/auth/register";
+          const endpoint = isLoginMode
+            ? "/api/auth/login"
+            : "/api/auth/register";
 
           const res = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(
-              isLoginMode
-                ? { email, password }
-                : { name, email, password }
+              isLoginMode ? { email, password } : { name, email, password }
             ),
           });
 
           const data = await res.json();
 
           if (!res.ok) {
-            authStatus.textContent = data.message || "Auth failed. Check details.";
+            authStatus.textContent =
+              data.message || "Auth failed. Check details.";
             authStatus.classList.add("error");
           } else {
             authStatus.textContent = isLoginMode
@@ -1048,7 +1085,9 @@
               <span class="product-price">${formatPrice(p.price)}</span>
               ${
                 oldPrice
-                  ? `<span class="product-old-price">${formatPrice(oldPrice)}</span>`
+                  ? `<span class="product-old-price">${formatPrice(
+                      oldPrice
+                    )}</span>`
                   : ""
               }
             </div>
@@ -1068,12 +1107,17 @@
             </span>
           </div>
           <div class="product-actions">
-            <button class="btn" type="button">Details</button>
+            <button class="btn details-btn" type="button">Details</button>
             <button class="btn btn-primary" type="button">🛒 Add to Cart</button>
           </div>
         `;
 
         const addBtn = card.querySelector(".btn.btn-primary");
+
+        const detailsBtn = card.querySelector(".details-btn");
+        detailsBtn.addEventListener("click", () => {
+          window.location.href = `/product.html?id=${p._id}`;
+        });
 
         addBtn.addEventListener("click", async () => {
           const token = getToken();
@@ -1130,6 +1174,21 @@
         });
 
         return card;
+      }
+
+      function showDetails(product) {
+        const modal = document.getElementById("detailsModal");
+        const titleEl = document.getElementById("detailsTitle");
+        const descEl = document.getElementById("detailsDescription");
+
+        titleEl.textContent = product.title || "No title";
+        descEl.textContent = product.description || "No description available.";
+
+        modal.style.display = "flex";
+      }
+
+      function closeDetails() {
+        document.getElementById("detailsModal").style.display = "none";
       }
 
       async function loadProducts(searchTerm = "") {
