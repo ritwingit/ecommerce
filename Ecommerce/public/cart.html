@@ -29,7 +29,12 @@
       body {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
           sans-serif;
-        background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+        background: radial-gradient(
+          circle at top,
+          #111827 0,
+          #020617 45%,
+          #000 100%
+        );
         color: var(--text);
         min-height: 100vh;
         display: flex;
@@ -103,7 +108,11 @@
         border-radius: 0 999px 999px 0;
         border: 1px solid var(--border-subtle);
         border-left: none;
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-strong)
+        );
         padding: 0 1rem;
         font-size: 0.9rem;
         font-weight: 600;
@@ -236,7 +245,12 @@
       .cart-item-img-wrap {
         border-radius: 0.7rem;
         border: 1px solid rgba(31, 41, 55, 0.9);
-        background: radial-gradient(circle at center, #020617 0, #020617 50%, #020617 100%);
+        background: radial-gradient(
+          circle at center,
+          #020617 0,
+          #020617 50%,
+          #020617 100%
+        );
         display: flex;
         align-items: center;
         justify-content: center;
@@ -379,7 +393,11 @@
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-strong)
+        );
         border-color: rgba(202, 138, 4, 0.9);
         color: #111827;
         font-weight: 600;
@@ -509,9 +527,9 @@
           <span id="cartStatusText">Fetching cart from backend…</span>
         </div>
 
-        <div id="cartEmpty" class="cart-empty" style="display: none;">
+        <div id="cartEmpty" class="cart-empty" style="display: none">
           Your cart is empty. Go back to the
-          <a href="/index.html" style="color: var(--accent);">home page</a>
+          <a href="/index.html" style="color: var(--accent)">home page</a>
           and add some products.
         </div>
 
@@ -553,7 +571,7 @@
           </button>
         </div>
 
-        <div class="status" id="summaryStatus" style="margin-top: 0.5rem;">
+        <div class="status" id="summaryStatus" style="margin-top: 0.5rem">
           <span class="status-dot"></span>
           <span id="summaryStatusText">Make sure you’re logged in.</span>
         </div>
@@ -562,7 +580,10 @@
 
     <!-- FOOTER -->
     <footer class="footer">
-      <span>DarkCart • Cart experience powered by your Node + Express + MongoDB backend.</span>
+      <span
+        >DarkCart • Cart experience powered by your Node + Express + MongoDB
+        backend.</span
+      >
       <span>Checkout now creates real orders via /api/orders.</span>
     </footer>
 
@@ -650,11 +671,7 @@
             <div class="cart-item-main">
               <div class="cart-item-title">${p.title || "Unnamed product"}</div>
               <div class="cart-item-meta">
-                ${
-                  p.category
-                    ? `<span>${p.category}</span> · `
-                    : ""
-                }<span>${
+                ${p.category ? `<span>${p.category}</span> · ` : ""}<span>${
             typeof p.countInStock === "number"
               ? p.countInStock + " in stock"
               : "In stock"
@@ -699,7 +716,9 @@
         });
 
         const { totalQty, subtotal } = computeTotals(items);
-        cartSubtitle.textContent = `${totalQty} item${totalQty !== 1 ? "s" : ""} in your cart`;
+        cartSubtitle.textContent = `${totalQty} item${
+          totalQty !== 1 ? "s" : ""
+        } in your cart`;
         navCartCount.textContent = totalQty;
         summaryItemsEl.textContent = totalQty;
         summarySubtotalEl.textContent = formatPrice(subtotal);
@@ -849,9 +868,12 @@
           }
 
           summaryStatusText.textContent =
-            "Order placed successfully! Clearing cart…";
-          await clearCart();
-          alert("Order placed! Check /api/orders to see it.");
+            "Order placed successfully! Redirecting…";
+
+          // OPTIONAL redirect to order.html
+          setTimeout(() => {
+            window.location.href = "/order.html";
+          }, 800);
         } catch (err) {
           console.error(err);
           summaryStatusText.textContent = "Failed to place order.";
