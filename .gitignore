@@ -35,6 +35,14 @@ coverage/
 out/
 .vercel/
 
+# Bun
+bun.lock
+
+# npm / yarn / pnpm lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
 # Svelte / Vite / React
 .svelte-kit/
 .vite/
