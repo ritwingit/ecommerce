@@ -849,9 +849,13 @@
           }
 
           summaryStatusText.textContent =
-            "Order placed successfully! Clearing cart…";
-          await clearCart();
-          alert("Order placed! Check /api/orders to see it.");
+            "Order placed successfully! Redirecting…";
+
+          // OPTIONAL redirect to order.html
+          setTimeout(() => {
+            window.location.href = "/order.html";
+          }, 800);
+
         } catch (err) {
           console.error(err);
           summaryStatusText.textContent = "Failed to place order.";

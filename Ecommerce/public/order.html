@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Checkout — DarkCart</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* Simple, responsive styles (dark theme to match your other pages) */
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;background:#070812;color:#e6eef8}
+    .container{max-width:980px;margin:28px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    header a{color:#fbbf24;text-decoration:none;font-weight:700}
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:18px}
+    .card{background:#0b1220;padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    h1{margin:0 0 12px;font-size:20px}
+    label{display:block;margin:10px 0 6px;font-size:13px;color:#a9b3c3}
+    input[type="text"],input[type="tel"],input[type="number"],select,textarea{
+      width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#07101b;color:#e6eef8;outline:none
+    }
+    .btn{display:inline-block;padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+    .btn-primary{background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#08121b;font-weight:700}
+    .muted{color:#9aa6b8;font-size:13px}
+    .summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
+    .summary-total{font-weight:700;padding-top:8px}
+    .small{font-size:13px;color:#9aa6b8}
+    .success{color:#95f5b7}
+    .error{color:#ffb6b6}
+    @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/index.html">DarkCart</a>
+      <div>
+        <a href="/cart.html" style="margin-right:12px">Cart</a>
+        <a href="/order.html">Checkout</a>
+      </div>
+    </header>
+
+    <h1>Checkout — Shipping & Payment</h1>
+
+    <div class="grid">
+      <!-- left: address & payment -->
+      <section class="card">
+        <h2 style="margin-top:0">Shipping address</h2>
+
+        <label for="addr_name">Full name</label>
+        <input id="addr_name" type="text" placeholder="Your full name" />
+
+        <label for="addr_phone">Phone</label>
+        <input id="addr_phone" type="tel" placeholder="+91 98765 43210" />
+
+        <label for="addr_line">Address line</label>
+        <input id="addr_line" type="text" placeholder="Flat, house, building, company, etc." />
+
+        <label for="addr_city">City</label>
+        <input id="addr_city" type="text" placeholder="City name" />
+
+        <label for="addr_postal">Postal / PIN code</label>
+        <input id="addr_postal" type="number" placeholder="560001" />
+
+        <label for="addr_country">Country</label>
+        <input id="addr_country" type="text" value="India" />
+
+        <hr style="margin:14px 0;border:0;border-top:1px solid rgba(255,255,255,0.03)">
+
+        <h2 style="margin:0 0 8px">Payment method</h2>
+        <div>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <input type="radio" name="pm" value="COD" checked /> <span class="small">Cash on Delivery</span>
+          </label>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <input type="radio" name="pm" value="Card" /> <span class="small">Card (mock)</span>
+          </label>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <input type="radio" name="pm" value="PayPal" /> <span class="small">PayPal (mock)</span>
+          </label>
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+          <button id="placeOrderBtn" class="btn btn-primary">Place Order</button>
+          <div id="feedback" class="small"></div>
+        </div>
+
+        <p class="muted" style="margin-top:12px">You must be logged in to place an order. Token is read from <code>localStorage.token</code>.</p>
+      </section>
+
+      <!-- right: order summary -->
+      <aside class="card">
+        <h3 style="margin-top:0">Order summary</h3>
+        <div id="summaryList" style="margin-top:8px"></div>
+
+        <div class="summary-row" style="border-bottom:1px solid rgba(255,255,255,0.02);margin-top:10px">
+          <div class="small">Items</div>
+          <div id="summaryItems" class="small">0</div>
+        </div>
+        <div class="summary-row">
+          <div class="small">Subtotal</div>
+          <div id="summarySubtotal" class="small">₹0</div>
+        </div>
+        <div class="summary-row">
+          <div class="small">Delivery</div>
+          <div class="small">Free</div>
+        </div>
+        <div class="summary-total">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>Total</div>
+            <div id="summaryTotal">₹0</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <button id="backToCart" class="btn" style="margin-right:8px">Back to cart</button>
+          <button id="clearCart" class="btn">Clear cart</button>
+        </div>
+
+        <p class="small" style="margin-top:10px">Orders are created at <code>POST /api/orders</code> on your server (protected route).</p>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // --- Helpers
+    function authHeaders() {
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      return headers;
+    }
+
+    function formatINR(n) { return '₹' + (Number(n) || 0).toLocaleString('en-IN'); }
+
+    // --- Elements
+    const summaryList = document.getElementById('summaryList');
+    const summaryItems = document.getElementById('summaryItems');
+    const summarySubtotal = document.getElementById('summarySubtotal');
+    const summaryTotal = document.getElementById('summaryTotal');
+    const feedback = document.getElementById('feedback');
+
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    const backToCart = document.getElementById('backToCart');
+    const clearCart = document.getElementById('clearCart');
+
+    // address inputs
+    const addr_name = document.getElementById('addr_name');
+    const addr_phone = document.getElementById('addr_phone');
+    const addr_line = document.getElementById('addr_line');
+    const addr_city = document.getElementById('addr_city');
+    const addr_postal = document.getElementById('addr_postal');
+    const addr_country = document.getElementById('addr_country');
+
+    // load cart from backend and render summary
+    let cart = { items: [] };
+
+    async function loadCart() {
+      feedback.textContent = '';
+      try {
+        const res = await fetch('/api/cart', { method: 'GET', headers: authHeaders() });
+        if (!res.ok) {
+          if (res.status === 401) { feedback.textContent = 'Please login first.'; feedback.className='error'; }
+          else { feedback.textContent = 'Failed to load cart (server error).'; feedback.className='error'; }
+          renderEmpty();
+          return;
+        }
+        cart = await res.json();
+        renderCartSummary(cart);
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = 'Failed to contact server.';
+        feedback.className='error';
+        renderEmpty();
+      }
+    }
+
+    function renderEmpty() {
+      summaryList.innerHTML = '<div class="small">Cart is empty</div>';
+      summaryItems.textContent = '0';
+      summarySubtotal.textContent = formatINR(0);
+      summaryTotal.textContent = formatINR(0);
+    }
+
+    function renderCartSummary(cart) {
+      const items = cart.items || [];
+      if (items.length === 0) { renderEmpty(); return; }
+
+      summaryList.innerHTML = '';
+      let subtotal = 0;
+      let totalQty = 0;
+
+      items.forEach((it) => {
+        // the cart shape in your backend uses item.productId containing the product document (see cart.html)
+        const product = it.productId || it.product || {};
+        const qty = it.quantity || it.qty || 1;
+        const price = Number(product.price || product.unitPrice || 0);
+        const lineTotal = price * qty;
+        subtotal += lineTotal;
+        totalQty += qty;
+
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.margin = '8px 0';
+        row.innerHTML = `<div style="max-width:70%"><div style="font-weight:600">${(product.title||product.name||'Product')}</div>
+                         <div class="small">${qty} × ${formatINR(price)}</div></div>
+                         <div style="font-weight:700">${formatINR(lineTotal)}</div>`;
+        summaryList.appendChild(row);
+      });
+
+      summaryItems.textContent = totalQty;
+      summarySubtotal.textContent = formatINR(subtotal);
+      summaryTotal.textContent = formatINR(subtotal); // no shipping calc here
+    }
+
+    // Place order
+    placeOrderBtn.addEventListener('click', async function () {
+      feedback.textContent = '';
+      feedback.className = '';
+
+      // validate address
+      if (!addr_name.value.trim() || !addr_line.value.trim() || !addr_city.value.trim() || !addr_postal.value.trim()) {
+        feedback.textContent = 'Please fill shipping address fields.';
+        feedback.className = 'error';
+        return;
+      }
+
+      if (!cart.items || cart.items.length === 0) {
+        feedback.textContent = 'Cart is empty.';
+        feedback.className = 'error';
+        return;
+      }
+
+      const pm = document.querySelector('input[name="pm"]:checked')?.value || 'COD';
+
+      // prepare order items in the shape your controller expects:
+      // controller expects items array (product, qty, price) and total & paymentMethod
+      const orderItems = cart.items.map(it => ({
+        product: it.productId?._id || it.product || it.productId,
+        qty: it.quantity || it.qty || 1,
+        price: it.productId?.price || it.price || 0
+      }));
+      const subtotal = (cart.items || []).reduce((s,it) => s + ((it.productId?.price||it.price||0) * (it.quantity||it.qty||1)), 0);
+
+      // shipping address included in the body (server currently doesn't store it by model — see note)
+      const body = {
+        items: orderItems,
+        total: subtotal,
+        paymentMethod: pm,
+        shippingAddress: {
+          name: addr_name.value.trim(),
+          phone: addr_phone.value.trim(),
+          line: addr_line.value.trim(),
+          city: addr_city.value.trim(),
+          postalCode: String(addr_postal.value).trim(),
+          country: addr_country.value.trim()
+        }
+      };
+
+      try {
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.textContent = 'Placing order...';
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          feedback.textContent = (data && data.message) ? data.message : 'Order failed';
+          feedback.className = 'error';
+          return;
+        }
+
+        feedback.textContent = 'Order placed successfully!';
+        feedback.className = 'success';
+
+        // clear cart on success (call your cart clear API)
+        await fetch('/api/cart/clear', { method: 'DELETE', headers: authHeaders() }).catch(()=>{});
+        // redirect to "orders" page or show the order id
+        setTimeout(() => {
+          // if you have orders UI, redirect; otherwise go to home
+          window.location.href = '/index.html';
+        }, 900);
+
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = 'Failed to place order (network).';
+        feedback.className = 'error';
+      } finally {
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.textContent = 'Place Order';
+      }
+    });
+
+    backToCart.addEventListener('click', () => window.location.href = '/cart.html');
+    clearCart.addEventListener('click', async () => {
+      if (!confirm('Clear cart?')) return;
+      try {
+        await fetch('/api/cart/clear', { method: 'DELETE', headers: authHeaders() });
+        await loadCart();
+      } catch (err) { console.error(err); }
+    });
+
+    // initial load
+    loadCart();
+  </script>
+</body>
+</html>

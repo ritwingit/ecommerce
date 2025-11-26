@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.0.1
 info:
   title: DarkCart Ecommerce API
   version: 1.0.0
@@ -8,79 +8,14 @@ servers:
   - url: http://localhost:5000
     description: Local development server
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-  schemas:
-    User:
-      type: object
-      properties:
-        _id: { type: string }
-        name: { type: string }
-        email: { type: string }
-        token: { type: string }
-
-    Product:
-      type: object
-      properties:
-        _id: { type: string }
-        title: { type: string }
-        price: { type: number }
-        image: { type: string }
-        category: { type: string }
-        countInStock: { type: number }
-
-    CartItem:
-      type: object
-      properties:
-        productId:
-          $ref: "#/components/schemas/Product"
-        quantity:
-          type: number
-
-    Cart:
-      type: object
-      properties:
-        _id: { type: string }
-        userId: { type: string }
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/CartItem"
-
-    Order:
-      type: object
-      properties:
-        _id: { type: string }
-        userId: { type: string }
-        orderItems:
-          type: array
-          items:
-            type: object
-            properties:
-              product:
-                $ref: "#/components/schemas/Product"
-              qty: { type: number }
-              price: { type: number }
-        totalAmount:
-          type: number
-
-security:
-  - bearerAuth: []
-
 paths:
-
   ###############################################
   # AUTH ROUTES
   ###############################################
-
   /api/auth/register:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Register a new user
       requestBody:
         required: true
@@ -88,18 +23,30 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, email, password]
+              required:
+                - name
+                - email
+                - password
               properties:
-                name: { type: string }
-                email: { type: string }
-                password: { type: string }
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
       responses:
-        201:
+        '201':
           description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
 
   /api/auth/login:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Login user & get JWT token
       requestBody:
         required: true
@@ -107,161 +54,466 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, password]
+              required:
+                - email
+                - password
               properties:
-                email: { type: string }
-                password: { type: string }
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
       responses:
-        200:
-          description: User logged in
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
 
   ###############################################
   # PRODUCT ROUTES
   ###############################################
-
   /api/products:
     get:
-      tags: [Products]
+      tags:
+        - Products
       summary: Get all products
       responses:
-        200:
+        '200':
           description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
 
     post:
-      tags: [Products]
+      tags:
+        - Products
       summary: Create a new product (Admin only)
-      security: [ { bearerAuth: [] } ]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Product"
+              $ref: '#/components/schemas/ProductInput'
       responses:
-        201:
+        '201':
           description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/products/{id}:
-    get:
-      tags: [Products]
-      summary: Get product by ID
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
-      responses:
-        200:
-          description: Product details
-    put:
-       tags: [Products]
-       summary: update a Products (Admin only)
-       security: [ { bearerAuth: [] } ]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Product ID
+        schema:
+          type: string
 
+    get:
+      tags:
+        - Products
+      summary: Get product by ID
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Products
+      summary: Update a product (Admin only)
+      description: Admin-only. Protected by bearer token. Use JSON body to update product fields.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Products
+      summary: Delete a product (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Product deleted (no content)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   ###############################################
   # CART ROUTES
   ###############################################
-
   /api/cart:
     get:
-      tags: [Cart]
-      summary: Get user cart
-      security: [ { bearerAuth: [] } ]
+      tags:
+        - Cart
+      summary: Get current user's cart
+      security:
+        - bearerAuth: []
       responses:
-        200:
-          description: Cart details
+        '200':
+          description: User cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /api/cart/add:
     post:
-      tags: [Cart]
+      tags:
+        - Cart
       summary: Add item to cart
-      security: [ { bearerAuth: [] } ]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [productId, quantity]
+              required:
+                - productId
+                - quantity
               properties:
-                productId: { type: string }
-                quantity: { type: number }
+                productId:
+                  type: string
+                quantity:
+                  type: integer
       responses:
-        200:
+        '200':
           description: Item added to cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
 
   /api/cart/update:
     put:
-      tags: [Cart]
+      tags:
+        - Cart
       summary: Update cart item quantity
-      security: [ { bearerAuth: [] } ]
+      security:
+        - bearerAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - productId
+                - quantity
               properties:
-                productId: { type: string }
-                quantity: { type: number }
+                productId:
+                  type: string
+                quantity:
+                  type: integer
       responses:
-        200:
-          description: Quantity updated
+        '200':
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
 
   /api/cart/remove:
     delete:
-      tags: [Cart]
-      summary: Remove an item from cart
-      security: [ { bearerAuth: [] } ]
+      tags:
+        - Cart
+      summary: Remove single item from cart
+      security:
+        - bearerAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - productId
               properties:
-                productId: { type: string }
+                productId:
+                  type: string
       responses:
-        200:
+        '200':
           description: Item removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
 
   /api/cart/clear:
     delete:
-      tags: [Cart]
+      tags:
+        - Cart
       summary: Clear entire cart
-      security: [ { bearerAuth: [] } ]
+      security:
+        - bearerAuth: []
       responses:
-        200:
+        '200':
           description: Cart cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
 
   ###############################################
   # ORDER ROUTES
   ###############################################
-
   /api/orders:
     get:
-      tags: [Orders]
-      summary: Get user's orders
-      security: [ { bearerAuth: [] } ]
+      tags:
+        - Orders
+      summary: List current user's orders
+      security:
+        - bearerAuth: []
       responses:
-        200:
-          description: All user orders
+        '200':
+          description: Array of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
 
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       summary: Create an order
-      security: [ { bearerAuth: [] } ]
+      security:
+        - bearerAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                items:
-                  type: array
-                  items:
-                    type: object
-                total:
-                  type: number
+              $ref: '#/components/schemas/OrderInput'
       responses:
-        201:
+        '201':
           description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized — missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden — admin role required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        token:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        price:
+          type: number
+          format: float
+        image:
+          type: string
+        category:
+          type: string
+        countInStock:
+          type: integer
+
+    ProductInput:
+      type: object
+      properties:
+        title:
+          type: string
+        price:
+          type: number
+          format: float
+        image:
+          type: string
+        category:
+          type: string
+        countInStock:
+          type: integer
+
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+
+    Cart:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        total:
+          type: number
+          format: float
+
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+          format: float
+
+    ShippingAddress:
+      type: object
+      properties:
+        address:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+
+    OrderInput:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        shippingAddress:
+          $ref: '#/components/schemas/ShippingAddress'
+
+    Order:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        orderItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        totalAmount:
+          type: number
+          format: float
+        status:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
