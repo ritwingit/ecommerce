@@ -51,3 +51,4 @@ vite.config.ts.timestamp*
 
 # VSCode
 .vscode/
+Ecommerce/bun.lock
