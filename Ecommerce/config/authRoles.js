@@ -1,5 +1,5 @@
 // config/authRoles.js
-import connectDB from "./db.js";
+
 import Role from "../models/role.js";
 
 export const roles = [
