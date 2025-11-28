@@ -3,17 +3,36 @@ import User from "../models/user.js";
 
 export const protect = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Not authorized" });
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized, no token" });
+  }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select("-password");
+
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) {
+      return res.status(401).json({ message: "Not authorised, user not found"})
+    }
+
+    req.user = user;
     next();
   } catch (err) {
     res.status(401).json({ message: "Token invalid" });
   }
 };
 
+// export const authorizeRoles = (...allowedRoles) => {
+//   return (req, res, next) => {
+//     if (!req.user || !allowedRoles.some(role => req.user.roles.includes(role))) {
+//       return res.status(403).json({ message: 'Access denied' });
+//     }
+//     next();
+//   };
+// };
+
 export const admin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) next();
-  else res.status(403).json({ message: "Admin only" });
+  if (req.user && (req.user.isAdmin || (req.user.roles && req.user.roles.includes('admin')))) {
+    return next();
+  }
+  return res.status(403).json({ message: "Admin only" });
 };
