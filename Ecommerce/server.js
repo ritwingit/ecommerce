@@ -3,8 +3,9 @@ import dotenv from "dotenv";
 import YAML from "yamljs";
 import swaggerUi from "swagger-ui-express";
 dotenv.config();
-const swaggerDocument =YAML.load("./docs/swagger.yaml")
+const swaggerDocument = YAML.load("./docs/swagger.yaml");
 import connectDB from "./config/db.js";
+import { seedRoles } from "./config/authRoles.js";
 
 connectDB();
 
@@ -19,6 +20,11 @@ import { fileURLToPath } from "url";
 
 const app = express();
 
+async () => {
+  await connectDB();
+  await seedRoles();
+};
+
 app.use(express.json());
 
 app.use(cors());
@@ -27,8 +33,6 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-
 
 // ✅ Serve index.html correctly
 app.get("/", (req, res) => {
