@@ -1,20 +1,41 @@
-import express from "express";
-import { addProductReview } from "../controllers/productController.js";
+import express from 'express';
 import {
   listProducts,
   getProduct,
   createProduct,
   updateProduct,
-  deleteProduct,
-} from "../controllers/productController.js";
-import { protect, admin } from "../middleware/auth.js";
+  deleteProduct
+} from '../controllers/productController.js';
+
+import { protect } from '../middleware/auth.js';
+import { requirePermissions } from '../middleware/rbac.js';
 
 const router = express.Router();
-router.get("/", listProducts);
-router.get("/:id", getProduct);
-router.post("/", protect, admin, createProduct);
-router.put("/:id", protect, admin, updateProduct);
-router.delete("/:id", protect, admin, deleteProduct);
-router.post("/:id/reviews", protect, addProductReview);
+
+// Public routes
+router.get('/', listProducts);
+router.get('/:id', getProduct);
+
+// Protected + RBAC routes
+router.post(
+  '/',
+  protect,
+  requirePermissions('product.create'),
+  createProduct
+);
+
+router.put(
+  '/:id',
+  protect,
+  requirePermissions('product.update'),
+  updateProduct
+);
+
+router.delete(
+  '/:id',
+  protect,
+  requirePermissions('product.delete'),
+  deleteProduct
+);
 
 export default router;
