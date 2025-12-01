@@ -1,10 +1,14 @@
-import mongoose from "mongoose";
+ import mongoose from "mongoose";
+const RoleSchema = new mongoose.Schema({
+  name: { type: String, required: true, unique: true },
 
-const roleSchema = new mongoose.Schema({
-  name: { type: String, unique: true, required: true },
-  permissions: [{ type: String, ref: 'Permission', required: true }], // store keys for speed
-  inherits: [{ type: String, ref: 'Role' }] // optional role inheritance
-}, { timestamps: true });
+  permissions: [{ type: String }],
 
-const Role = mongoose.models.Role || mongoose.model("Role", roleSchema);
+  inherits: [{ type: String }],   // names of parent roles
+
+  overrides: [{ type: String }],  // only if roles have overrides (optional)
+});
+
+const Role=mongoose.models.Role || mongoose.model("Role",RoleSchema)
+
 export default Role;

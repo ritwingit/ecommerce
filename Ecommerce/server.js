@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 dotenv.config();
 const swaggerDocument =YAML.load("./docs/swagger.yaml")
 import connectDB from "./config/db.js";
+import { seedRoles } from "./config/authRoles.js";
 
 connectDB();
 
@@ -18,6 +19,11 @@ import cartRoutes from "./routes/cartRoutes.js";
 import { fileURLToPath } from "url";
 
 const app = express();
+
+(async () => {
+  await connectDB();
+  await seedRoles();
+})();
 
 app.use(express.json());
 

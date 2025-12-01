@@ -20,6 +20,7 @@
   "homepage": "https://github.com/ritwingit/ecommerce#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "bun": "^1.3.3",
     "cookie": "^1.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -32,4 +33,3 @@
     "yamljs": "^0.3.0"
   }
 }
-               
