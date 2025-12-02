@@ -276,9 +276,10 @@ servers:
 
 components:
   securitySchemes:
-    basicAuth:
+    bearerAuth:
       type: http
-      scheme: basic
+      scheme: bearer
+      bearerFormat: JWT
 
   schemas:
     User:
@@ -337,7 +338,7 @@ components:
           type: number
 
 security:
-  - basicAuth: []
+  - bearerAuth: []
 
 paths:
   ###############################################
@@ -395,14 +396,9 @@ paths:
 
     post:
       tags: [Products]
-<<<<<<< Updated upstream
       summary: Create a new product (requires product.create permission)
       security:
         - bearerAuth: []
-=======
-      summary: Create a new product (Admin only)
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
       requestBody:
         required: true
         content:
@@ -428,7 +424,6 @@ paths:
 
     put:
       tags: [Products]
-<<<<<<< Updated upstream
       summary: Update a product (requires product.update permission)
       security:
         - bearerAuth: []
@@ -460,10 +455,6 @@ paths:
       responses:
         200:
           description: Product deleted
-=======
-      summary: update a Products (Admin only)
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
 
   ###############################################
   # CART ROUTES
@@ -472,14 +463,9 @@ paths:
   /api/cart:
     get:
       tags: [Cart]
-<<<<<<< Updated upstream
       summary: Get logged-in user's cart
       security:
         - bearerAuth: []
-=======
-      summary: Get user cart
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
       responses:
         200:
           description: Cart details
@@ -488,12 +474,8 @@ paths:
     post:
       tags: [Cart]
       summary: Add item to cart
-<<<<<<< Updated upstream
       security:
         - bearerAuth: []
-=======
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
       requestBody:
         required: true
         content:
@@ -507,14 +489,9 @@ paths:
   /api/cart/update:
     put:
       tags: [Cart]
-<<<<<<< Updated upstream
       summary: Update item quantity
       security:
         - bearerAuth: []
-=======
-      summary: Update cart item quantity
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
       requestBody:
         required: true
         content:
@@ -529,12 +506,8 @@ paths:
     delete:
       tags: [Cart]
       summary: Remove an item from cart
-<<<<<<< Updated upstream
       security:
         - bearerAuth: []
-=======
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
       requestBody:
         required: true
         content:
@@ -552,12 +525,8 @@ paths:
     delete:
       tags: [Cart]
       summary: Clear entire cart
-<<<<<<< Updated upstream
       security:
         - bearerAuth: []
-=======
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
       responses:
         200:
           description: Cart cleared
@@ -567,26 +536,11 @@ paths:
   ###############################################
 
   /api/orders:
-<<<<<<< Updated upstream
     post:
       tags: [Orders]
       summary: Create a new order
       security:
         - bearerAuth: []
-=======
-    get:
-      tags: [Orders]
-      summary: Get user's orders
-      security: [{ basicAuth: [] }]
-      responses:
-        200:
-          description: All user orders
-
-    post:
-      tags: [Orders]
-      summary: Create an order
-      security: [{ basicAuth: [] }]
->>>>>>> Stashed changes
       requestBody:
         required: true
         content:
