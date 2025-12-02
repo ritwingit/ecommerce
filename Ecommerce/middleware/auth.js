@@ -1,23 +1,36 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.js";
+import bcrypt from "bcrypt";
+import User from "../models/user";
 
 export const protect = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized, no token" });
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return res.status(401).json({ message: "Not authorized, no credentials" });
   }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("-password");
+  const base64Credentials = authHeader.split(" ")[1];
+  const credentials = Buffer.from(base64Credentials, "base64").toString("ascii");
+  const [email, password] = credentials.split(":");
+
+  if (!email || !password) {
+    return res.status(401).json({ message: "Invalid credentials format" });
+  }
+
+  try {
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(401).json({ message: "Not authorised, user not found"})
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
     req.user = user;
     next();
   } catch (err) {
-    res.status(401).json({ message: "Token invalid" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
